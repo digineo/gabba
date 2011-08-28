@@ -15,6 +15,10 @@ module Gabba
     BEACON_PATH = "/__utm.gif"
     USER_AGENT = "Gabba #{VERSION} Agent"
     
+    # Asynchronous HTTP-Requests?
+    cattr_accessor :async
+    self.async = true
+    
     attr_accessor :utmwv, :utmn, :utmhn, :utmcs, :utmul, :utmdt, :utmp, :utmac, :utmt, :utmcc, :user_agent
     
     def initialize(ga_acct, domain, agent = Gabba::USER_AGENT)
@@ -137,9 +141,17 @@ module Gabba
       raise NoGoogleAnalyticsAccountError unless @utmac
       raise NoGoogleAnalyticsDomainError unless @utmhn
     end
-
-    # makes the tracking call to Google Analytics
+    
     def hey(params)
+      if async
+        Thread.new { hey_sync(params) }
+      else
+        hey_sync(params)
+      end
+    end
+    
+    # makes the tracking call to Google Analytics
+    def hey_sync(params)
       query = params.map {|k,v| "#{k}=#{URI.escape(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}" }.join('&')
       response = Net::HTTP.start(GOOGLE_HOST) do |http|
         request = Net::HTTP::Get.new("#{BEACON_PATH}?#{query}")
