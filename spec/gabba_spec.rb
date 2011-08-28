@@ -7,7 +7,7 @@ describe Gabba::Gabba do
       @gabba = Gabba::Gabba.new("abc", "123")
       @gabba.utmn = "1009731272"
       @gabba.utmcc = ''
-      stub_analytics @gabba.page_view_params("title", "/page/path", "6783939397")
+      stub_analytics @gabba.page_view_params("title", "/page/path")
     end
     
     it "must require GA account" do
@@ -23,7 +23,7 @@ describe Gabba::Gabba do
     end
 
     it "must do page view request to google" do
-      @gabba.page_view("title", "/page/path", "6783939397").code.must_equal("200")
+      @gabba.page_view("title", "/page/path", :utmhid => "6783939397").code.must_equal("200")
     end
   end
 
@@ -32,7 +32,7 @@ describe Gabba::Gabba do
       @gabba = Gabba::Gabba.new("abc", "123")
       @gabba.utmn = "1009731272"
       @gabba.utmcc = ''
-      stub_analytics @gabba.event_params("cat1", "act1", "lab1", "val1", "6783939397")
+      stub_analytics @gabba.event_params("cat1", "act1", "lab1", "val1")
     end
     
     it "must require GA account" do
@@ -52,7 +52,7 @@ describe Gabba::Gabba do
     end
     
     it "must do event request to google" do
-      @gabba.event("cat1", "act1", "lab1", "val1", "6783939397").code.must_equal("200")
+      @gabba.event("cat1", "act1", "lab1", "val1").code.must_equal("200")
     end
 
   end
@@ -62,19 +62,19 @@ describe Gabba::Gabba do
       @gabba = Gabba::Gabba.new("abc", "123")
       @gabba.utmn = "1009731272"
       @gabba.utmcc = ''
-      stub_analytics @gabba.item_params("orderid", "1234", "widget", "widgets", "9.99", "1", "6783939397")
+      stub_analytics @gabba.item_params("orderid", "1234", "widget", "widgets", "9.99", "1")
     end
     
     it "must require GA account" do
-      lambda {Gabba::Gabba.new(nil, nil).add_item("orderid", "1234", "widget", "widgets", "9.99", "1", "6783939397")}.must_raise(Gabba::NoGoogleAnalyticsAccountError)
+      lambda {Gabba::Gabba.new(nil, nil).add_item("orderid", "1234", "widget", "widgets", "9.99", "1")}.must_raise(Gabba::NoGoogleAnalyticsAccountError)
     end
 
     it "must require GA domain" do
-      lambda {Gabba::Gabba.new("abs", nil).add_item("orderid", "1234", "widget", "widgets", "9.99", "1", "6783939397")}.must_raise(Gabba::NoGoogleAnalyticsDomainError)
+      lambda {Gabba::Gabba.new("abs", nil).add_item("orderid", "1234", "widget", "widgets", "9.99", "1")}.must_raise(Gabba::NoGoogleAnalyticsDomainError)
     end
     
     it "must do add item request to google" do
-      @gabba.add_item("orderid", "1234", "widget", "widgets", "9.99", "1", "6783939397").code.must_equal("200")
+      @gabba.add_item("orderid", "1234", "widget", "widgets", "9.99", "1").code.must_equal("200")
     end
   end
   
@@ -83,19 +83,19 @@ describe Gabba::Gabba do
       @gabba = Gabba::Gabba.new("abc", "123")
       @gabba.utmn = "1009731272"
       @gabba.utmcc = ''
-      stub_analytics @gabba.transaction_params("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States", "6783939397")
+      stub_analytics @gabba.transaction_params("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States")
     end
     
     it "must require GA account" do
-      lambda {Gabba::Gabba.new(nil, nil).transaction("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States", "6783939397")}.must_raise(Gabba::NoGoogleAnalyticsAccountError)
+      lambda {Gabba::Gabba.new(nil, nil).transaction("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States")}.must_raise(Gabba::NoGoogleAnalyticsAccountError)
     end
 
     it "must require GA domain" do
-      lambda {Gabba::Gabba.new("abs", nil).transaction("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States", "6783939397")}.must_raise(Gabba::NoGoogleAnalyticsDomainError)
+      lambda {Gabba::Gabba.new("abs", nil).transaction("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States")}.must_raise(Gabba::NoGoogleAnalyticsDomainError)
     end
     
     it "must do transaction request to google" do
-      @gabba.transaction("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States", "6783939397").code.must_equal("200")
+      @gabba.transaction("orderid", "9.99", "acme stores", ".25", "1.00", "San Jose", "CA", "United States").code.must_equal("200")
     end
   end
 
