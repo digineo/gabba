@@ -22,6 +22,11 @@ module Gabba
     BEACON_PATH = "/__utm.gif"
     USER_AGENT = "Gabba #{VERSION} Agent"
     
+    # Custom var levels
+    VISITOR = 1
+    SESSION = 2
+    PAGE    = 3
+    
     # Asynchronous HTTP-Requests?
     cattr_accessor :async
     self.async = true
@@ -38,6 +43,67 @@ module Gabba
       @utmac = account # account string (MO-xxxxxxx-x)
       @utmhn = domain
       @user_agent = agent
+      
+      @custom_vars = []
+    end
+    
+
+    # Public: Set a custom variable to be passed along and logged by Google Analytics
+    # (http://code.google.com/apis/analytics/docs/tracking/gaTrackingCustomVariables.html)
+    #
+    # index  - Integer between 1 and 50 for this custom variable (limit is 5 normally, but is 50 for GA Premium)
+    # name   - String with the name of the custom variable
+    # value  - String with the value for teh custom variable
+    # scope  - Integer with custom variable scope must be 1 (VISITOR), 2 (SESSION) or 3 (PAGE)
+    #
+    # Example:
+    #
+    #   g = Gabba::Gabba.new("UT-1234", "mydomain.com")
+    #   g.set_custom_var(1, 'awesomeness', 'supreme', Gabba::VISITOR)
+    #   # => ['awesomeness', 'supreme', 1]
+    #
+    # Returns array with the custom variable data
+    def set_custom_var(index, name, value, scope)
+      raise "Index must be between 1 and 50" unless (1..50).include?(index)
+      raise "Scope must be 1 (VISITOR), 2 (SESSION) or 3 (PAGE)" unless (1..3).include?(scope)
+
+      @custom_vars[index] = [ name, value, scope ]
+    end
+
+    # Public: Delete a previously set custom variable so if is not passed along and logged by Google Analytics
+    # (http://code.google.com/apis/analytics/docs/tracking/gaTrackingCustomVariables.html)
+    #
+    # index  - Integer between 1 and 5 for this custom variable
+    #
+    # Example:
+    #   g = Gabba::Gabba.new("UT-1234", "mydomain.com")
+    #   g.delete_custom_var(1)
+    #
+    def delete_custom_var(index)
+      raise "Index must be between 1 and 5" unless (1..5).include?(index)
+
+      @custom_vars.delete_at(index)
+    end
+
+    # Public: Renders the custom variable data in the format needed for GA
+    # (http://code.google.com/apis/analytics/docs/tracking/gaTrackingCustomVariables.html)
+    # Called before actually sending the data along to GA.
+    def custom_var_data
+      names  = []
+      values = []
+      scopes = []
+
+      idx = 1
+      @custom_vars.each_with_index do |(n, v, s), i|
+        next if !n || !v || (/\w/ !~ n) || (/\w/ !~ v)
+        prefix = "#{i}!" if idx != i
+        names  << "#{prefix}#{URI.escape(n)}"
+        values << "#{prefix}#{URI.escape(v)}"
+        scopes << "#{prefix}#{URI.escape(s)}"
+        idx = i + 1
+      end
+
+      names.empty? ? nil : "8(#{names.join('*')})9(#{values.join('*')})11(#{scopes.join('*')})"
     end
     
     # Track a page view
@@ -52,7 +118,8 @@ module Gabba
     def page_view_params(title, page, params)
       build_params params.merge(
         :utmdt => title,
-        :utmp  => page
+        :utmp  => page,
+        :utme  => custom_var_data
       )
     end
   
@@ -63,7 +130,7 @@ module Gabba
     def event_params(category, action, label = nil, value = nil, params)
       build_params params.merge(
         :utmt => 'event',
-        :utme => event_data(category, action, label, value)
+        :utme => event_data(category, action, label, value) << custom_var_data.to_s
       )
     end
 
